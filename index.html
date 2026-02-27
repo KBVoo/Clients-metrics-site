@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Клиентские Метрики</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Tenor+Sans&display=swap" rel="stylesheet">
+<style>
+/* ─────────────── TOKENS ─────────────── */
+:root {
+  --white:#fff;
+  --bg:#f8f7f5;
+  --light:#f0ede8;
+  --border:#e0ddd8;
+  --border-dk:#c8c4bc;
+  --text:#1a1a18;
+  --mid:#4a4840;
+  --dim:#888680;
+  --gold:#8a6e3e;
+  --gold2:#b8932a;
+  --green:#1d5e38;
+  --green-bg:#e8f4ee;
+  --green-bd:#a8d4b8;
+  --red:#8a1a1a;
+  --red-bg:#fdf0f0;
+  --red-bd:#e8a0a0;
+  --red-card:#fff6f6;
+  --amber:#6e3d10;
+  --amber-bg:#fdf4e8;
+  --amber-bd:#e8c080;
+  --amber-card:#fffbf4;
+
+  --pad:52px;     /* desktop horizontal padding */
+  --gap:1px;      /* grid gap = hairline */
+}
+
+/* ─────────────── RESET ─────────────── */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{font-size:15px;}
+body{background:var(--bg);color:var(--text);font-family:'Tenor Sans',sans-serif;min-height:100vh;line-height:1.5;}
+button{cursor:pointer;font-family:inherit;}
+.page{display:none;}
+.page.active{display:block;}
+
+/* ─────────────── HEADER ─────────────── */
+header{background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;}
+
+.h-top{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:0 var(--pad);height:68px;border-bottom:1px solid var(--border);
+}
+.logo{
+  font-family:'Playfair Display',serif;font-size:20px;font-weight:400;
+  letter-spacing:.25em;text-transform:uppercase;white-space:nowrap;
+}
+.logo-sub{font-size:9px;letter-spacing:.24em;color:var(--dim);text-transform:uppercase;margin-top:3px;}
+
+.h-status{
+  display:flex;align-items:center;gap:8px;padding:7px 16px;
+  border:1px solid var(--green-bd);background:var(--green-bg);white-space:nowrap;flex-shrink:0;
+}
+.h-status.warn{background:var(--amber-bg);border-color:var(--amber-bd);}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 2.5s infinite;}
+.sdot.warn{background:var(--amber);animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.stxt{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--green);}
+.stxt.warn{color:var(--amber);}
+
+.h-clock{text-align:right;flex-shrink:0;}
+.h-clock .time{font-family:'Playfair Display',serif;font-size:22px;letter-spacing:.04em;}
+.h-clock .date{font-size:9px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin-top:2px;}
+
+/* NAV */
+.h-nav{
+  display:flex;align-items:center;padding:0 var(--pad);height:40px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;gap:0;
+}
+.h-nav::-webkit-scrollbar{display:none;}
+.ni{
+  padding:0 22px;height:40px;display:flex;align-items:center;white-space:nowrap;
+  font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);
+  border:none;border-bottom:2px solid transparent;background:none;
+  position:relative;top:1px;transition:all .15s;flex-shrink:0;
+}
+.ni.active{color:var(--text);border-bottom-color:var(--text);}
+.ni:hover:not(.active){color:var(--gold);}
+
+/* ─────────────── MAIN ─────────────── */
+main{padding:36px var(--pad);max-width:1600px;margin:0 auto;}
+
+/* BLOCK */
+.block{margin-bottom:48px;animation:fadeUp .35s ease both;}
+.block:nth-child(1){animation-delay:0s}
+.block:nth-child(2){animation-delay:.07s}
+.block:nth-child(3){animation-delay:.14s}
+.block:nth-child(4){animation-delay:.21s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.bh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border-dk);}
+.bh-l{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;}
+.bt{font-family:'Playfair Display',serif;font-size:16px;letter-spacing:.2em;text-transform:uppercase;}
+.bc{font-size:9px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;}
+.bu{font-size:9px;color:var(--dim);white-space:nowrap;}
+
+/* ─────────────── GRIDS ─────────────── */
+/* All grids collapse to 1 col on mobile, specific breakpoints below */
+.g2,.g3,.g4,.g-kc,.g-pred4,.g-pred3{
+  display:grid;gap:var(--gap);background:var(--border);border:1px solid var(--border);
+}
+.g2      {grid-template-columns:repeat(2,1fr);}
+.g3      {grid-template-columns:repeat(3,1fr);}
+.g4      {grid-template-columns:repeat(4,1fr);}
+.g-kc    {grid-template-columns:2fr 1fr 1fr 1fr;margin-top:var(--gap);}
+.g-pred4 {grid-template-columns:repeat(4,1fr);}
+.g-pred3 {grid-template-columns:2fr 1fr 1fr;margin-top:var(--gap);}
+
+/* ─────────────── CARD ─────────────── */
+.card{background:var(--white);padding:24px;position:relative;overflow:hidden;transition:background .15s;}
+.card:hover{background:#fdfcfa;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.card.good::before{background:var(--green);}
+.card.warn::before{background:var(--amber);}
+.card.bad::before {background:var(--red);}
+.card.gold::before{background:var(--gold2);}
+.card.warn{background:var(--amber-card);}
+.card.bad {background:var(--red-card);}
+.card.warn:hover{background:#fffaf0;}
+.card.bad:hover {background:#fff2f2;}
+
+/* card head: label + target on same row */
+.ch{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px;}
+.cl{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);line-height:1.5;flex:1;}
+.ct{font-size:9px;letter-spacing:.08em;color:var(--dim);white-space:nowrap;flex-shrink:0;padding-top:1px;}
+
+.cn{font-family:'Playfair Display',serif;font-size:48px;font-weight:400;line-height:1;color:var(--text);}
+.card.warn .cn{color:var(--amber);}
+.card.bad  .cn{color:var(--red);}
+.cu{font-size:14px;color:var(--mid);margin-left:4px;}
+.cd{font-size:11px;color:var(--mid);line-height:1.6;margin-top:8px;}
+
+/* dev strip */
+.ds{display:none;align-items:center;gap:8px;margin-top:12px;padding:9px 12px;border:1px solid;font-size:11px;}
+.card.warn .ds{display:flex;border-color:var(--amber-bd);background:var(--amber-bg);color:var(--amber);}
+.card.bad  .ds{display:flex;border-color:var(--red-bd);background:var(--red-bg);color:var(--red);}
+.di{font-size:13px;flex-shrink:0;}
+
+/* badge */
+.badge{display:inline-flex;align-items:center;gap:4px;margin-top:10px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border:1px solid;}
+.badge.ok   {border-color:var(--green-bd);color:var(--green);background:var(--green-bg);}
+.badge.alert{border-color:var(--amber-bd);color:var(--amber);background:var(--amber-bg);}
+.badge.issue{border-color:var(--red-bd);color:var(--red);background:var(--red-bg);}
+
+.cdiv{height:1px;background:var(--border);margin:14px 0;}
+
+/* sub row */
+.sr{display:flex;}
+.si{flex:1;padding-right:14px;border-right:1px solid var(--border);margin-right:14px;}
+.si:last-child{border-right:none;margin-right:0;padding-right:0;}
+.sv{font-family:'Playfair Display',serif;font-size:20px;color:var(--text);}
+.sv.bad {color:var(--red);font-weight:500;}
+.sv.good{color:var(--green);}
+.sv.warn{color:var(--amber);}
+.sl{font-size:9px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;margin-top:3px;}
+
+/* progress */
+.pw{margin-top:12px;}
+.pb{height:2px;background:var(--light);position:relative;}
+.pf{position:absolute;top:0;left:0;height:100%;transition:width 1.2s ease;}
+.pf.good{background:var(--green);}
+.pf.warn{background:var(--amber);}
+.pf.bad {background:var(--red);}
+.pl{display:flex;justify-content:space-between;margin-top:5px;font-size:9px;color:var(--dim);}
+
+/* breakdown */
+.bdown{margin-top:12px;}
+.brow{display:flex;align-items:center;gap:8px;margin-bottom:9px;}
+.bdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.bname{font-size:10px;color:var(--mid);flex:1;}
+.bbg{width:80px;height:2px;background:var(--light);flex-shrink:0;}
+.bbf{height:100%;}
+.bv{font-size:10px;color:var(--mid);width:38px;text-align:right;flex-shrink:0;font-family:'Playfair Display',serif;}
+
+/* spark */
+.spk{margin-top:12px;height:28px;}
+svg.spk{width:100%;height:100%;}
+
+/* ─────────────── PAGE 2 — PREDICT ─────────────── */
+/* Hero banner — white with left amber border, same palette as page 1 */
+.p2-hero{
+  background:var(--white);
+  border-bottom:1px solid var(--border);
+  border-left:4px solid var(--amber);
+  padding:40px var(--pad) 36px;
+  position:relative;overflow:hidden;
+}
+.p2-hero::after{
+  content:'⚠';
+  position:absolute;right:var(--pad);top:50%;transform:translateY(-50%);
+  font-size:100px;opacity:.04;line-height:1;pointer-events:none;
+}
+.p2-eyebrow{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--amber);margin-bottom:12px;opacity:.85;}
+.p2-title{
+  font-family:'Playfair Display',serif;font-size:34px;font-weight:400;
+  color:var(--text);letter-spacing:.02em;line-height:1.15;margin-bottom:16px;
+}
+.p2-title span{color:var(--amber);}
+.p2-desc{font-size:12px;color:var(--mid);line-height:1.8;max-width:680px;margin-bottom:24px;}
+.p2-causes{display:flex;flex-wrap:wrap;gap:8px;}
+.p2c-pill{
+  display:flex;align-items:center;gap:7px;padding:7px 14px;
+  font-size:9px;letter-spacing:.1em;text-transform:uppercase;border:1px solid;
+}
+.p2c-pill.crit{border-color:var(--amber-bd);color:var(--amber);background:var(--amber-bg);}
+.p2c-pill.ok  {border-color:var(--green-bd);color:var(--green);background:var(--green-bg);}
+
+/* section label for p2 */
+.p2-sh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border-dk);}
+.p2-st{font-family:'Playfair Display',serif;font-size:16px;letter-spacing:.2em;text-transform:uppercase;}
+.p2-sc{font-size:9px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;}
+
+/* predict card */
+.pc{background:var(--white);padding:24px;position:relative;overflow:hidden;transition:background .15s;}
+.pc:hover{background:#fdfcfa;}
+.pc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--border-dk);}
+.pc.fc-bad ::before{background:var(--red);}
+.pc.fc-warn::before{background:var(--amber);}
+.pc.fc-ok  ::before{background:var(--green);}
+.pc.fc-bad {background:var(--red-card);}
+.pc.fc-warn{background:var(--amber-card);}
+
+.pc-lbl{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:18px;}
+.pc-row{display:flex;align-items:flex-end;}
+.pc-col{flex:1;}
+.pc-ch{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;}
+.pc-now{font-family:'Playfair Display',serif;font-size:24px;color:var(--text);}
+.pc-fore{font-family:'Playfair Display',serif;font-size:38px;line-height:1;}
+.pc-fore.bad {color:var(--red);}
+.pc-fore.warn{color:var(--amber);}
+.pc-fore.ok  {color:var(--green);}
+.pc-arr{padding:0 10px 6px;font-size:16px;color:var(--border-dk);}
+.pc-delta{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--mid);line-height:1.6;}
+.pc-delta strong     {color:var(--amber);}
+.pc-delta strong.bad {color:var(--red);}
+.pc-delta strong.ok  {color:var(--green);}
+.pc-tag{display:inline-block;padding:2px 7px;margin-right:5px;font-size:8px;letter-spacing:.1em;text-transform:uppercase;border:1px solid;}
+.pc-tag.bad {border-color:var(--red-bd);color:var(--red);background:var(--red-bg);}
+.pc-tag.warn{border-color:var(--amber-bd);color:var(--amber);background:var(--amber-bg);}
+.pc-tag.ok  {border-color:var(--green-bd);color:var(--green);background:var(--green-bg);}
+
+/* ─────────────── RESPONSIVE ─────────────── */
+@media(max-width:900px){
+  :root{--pad:20px;}
+  html{font-size:14px;}
+
+  /* header */
+  .h-top{height:auto;padding:14px var(--pad);flex-wrap:wrap;gap:12px;}
+  .h-status{order:3;width:100%;}
+  .h-clock{order:2;}
+  .logo{font-size:17px;letter-spacing:.18em;}
+  .logo-sub{display:none;}
+  .h-clock .time{font-size:18px;}
+
+  .h-nav{padding:0 var(--pad);}
+  .ni{padding:0 14px;font-size:8px;}
+
+  /* main */
+  main{padding:24px var(--pad);}
+  .bh{flex-direction:column;gap:4px;align-items:flex-start;}
+  .bu{display:none;}
+
+  /* ALL grids → 1 column on mobile */
+  .g2,.g3,.g4,.g-kc,.g-pred4,.g-pred3{
+    grid-template-columns:1fr !important;
+  }
+  /* tablet overrides */
+}
+
+@media(min-width:600px) and (max-width:900px){
+  /* 2-col tablet */
+  .g2     {grid-template-columns:repeat(2,1fr);}
+  .g3     {grid-template-columns:repeat(2,1fr);}
+  .g4     {grid-template-columns:repeat(2,1fr);}
+  .g-kc   {grid-template-columns:1fr 1fr;margin-top:var(--gap);}  /* tablet: 2col */
+  .g-pred4{grid-template-columns:repeat(2,1fr);}
+  .g-pred3{grid-template-columns:1fr 1fr;margin-top:var(--gap);}
+}
+
+@media(max-width:599px){
+  .cn{font-size:40px;}
+  .pc-fore{font-size:32px;}
+  .p2-title{font-size:24px;}
+  .p2-hero::after{display:none;}
+  /* sub-row wraps on very small */
+  .sr{flex-wrap:wrap;gap:10px;}
+  .si{min-width:80px;border-right:none;padding-right:0;margin-right:0;}
+  /* breakdown bar hidden on tiny */
+  .bbg{display:none;}
+}
+
+@media(min-width:901px) and (max-width:1200px){
+  :root{--pad:32px;}
+  .g4     {grid-template-columns:repeat(2,1fr);}
+  .g-pred4{grid-template-columns:repeat(2,1fr);}
+}
+
+/* ── general metrics: 3 cols ── */
+.g3-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--gap);background:var(--border);border:1px solid var(--border);}
+@media(max-width:900px){.g3-metrics{grid-template-columns:1fr;}}
+@media(min-width:600px) and (max-width:900px){.g3-metrics{grid-template-columns:repeat(2,1fr);}}
+
+/* ── CHI CARD ── */
+.chi-score{display:flex;align-items:center;gap:20px;margin:4px 0 14px;}
+.chi-indicator{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;border:2px solid;transition:all .3s;}
+.chi-indicator.healthy{background:var(--green-bg);border-color:var(--green-bd);}
+.chi-indicator.risk   {background:var(--amber-bg);border-color:var(--amber-bd);}
+.chi-indicator.crisis {background:var(--red-bg);  border-color:var(--red-bd);}
+.chi-verdict{font-family:'Playfair Display',serif;}
+.chi-verdict .cv-score{font-size:42px;line-height:1;}
+.chi-verdict .cv-label{font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-top:4px;}
+.chi-verdict.healthy .cv-score,.chi-verdict.healthy .cv-label{color:var(--green);}
+.chi-verdict.risk    .cv-score,.chi-verdict.risk    .cv-label{color:var(--amber);}
+.chi-verdict.crisis  .cv-score,.chi-verdict.crisis  .cv-label{color:var(--red);}
+.chi-components{margin-top:12px;}
+.chi-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.chi-name{font-size:10px;color:var(--mid);flex:1;}
+.chi-bar-bg{width:70px;height:3px;background:var(--light);border-radius:2px;flex-shrink:0;}
+.chi-bar-fill{height:100%;border-radius:2px;}
+.chi-val{font-size:10px;font-family:'Playfair Display',serif;color:var(--mid);width:36px;text-align:right;flex-shrink:0;}
+.chi-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ PAGE 1 ══════════════ -->
+<div class="page active" id="page1">
+<header>
+  <div class="h-top">
+    <div>
+      <div class="logo">Клиентские&nbsp;Метрики</div>
+      <div class="logo-sub">Оперативный мониторинг &mdash; единица времени</div>
+    </div>
+    <div class="h-status">
+      <div class="sdot"></div>
+      <div class="stxt">Все метрики в норме</div>
+    </div>
+    <div class="h-clock">
+      <div class="time" id="clock1">—</div>
+      <div class="date" id="date1">—</div>
+    </div>
+  </div>
+  <nav class="h-nav">
+    <button class="ni active" onclick="showPage(1)">Текущие показатели</button>
+    <button class="ni" onclick="showPage(2)">Предикт нагрузки на КЦ</button>
+  </nav>
+</header>
+<main>
+
+<!-- ЛОГИСТИКА СЕЙЧАС -->
+<div class="block">
+  <div class="bh">
+    <div class="bh-l"><div class="bt">Логистика &mdash; Сейчас</div><div class="bc">Показатели доставки текущего дня</div></div>
+    <div class="bu">Обновлено: <span class="upd"></span></div>
+  </div>
+  <div class="g4">
+
+    <div class="card good">
+      <div class="ch"><div class="cl">Идеальный заказ</div><div class="ct">Цель ≥ 92%</div></div>
+      <div><span class="cn">94.7</span><span class="cu">%</span></div>
+      <div class="pw"><div class="pb"><div class="pf good" style="width:94.7%"></div></div>
+        <div class="pl"><span>Без отмен, переносов дат и интервалов</span><span>94.7 / 100</span></div>
+      </div>
+      <div class="badge ok">↑ +1.2% к вчера</div>
+      <div class="cdiv"></div>
+      <div class="sr">
+        <div class="si"><div class="sv">1 284</div><div class="sl">Идеальных</div></div>
+        <div class="si"><div class="sv">76</div><div class="sl">С отклонениями</div></div>
+      </div>
+    </div>
+
+    <div class="card warn">
+      <div class="ch"><div class="cl">Выполняющиеся заказы</div></div>
+      <div><span class="cn">2 341</span></div>
+      <div class="ds"><span class="di">⚠</span><span><strong>237 заказов в просрочке</strong> — 10.1% от выполняющихся</span></div>
+      <div class="pw"><div class="pb"><div class="pf bad" style="width:10.1%"></div></div>
+        <div class="pl"><span>Доля просрочки</span><span>10.1%</span></div>
+      </div>
+      <div class="cdiv"></div>
+      <div class="sr">
+        <div class="si"><div class="sv">2 104</div><div class="sl">В процессе</div></div>
+        <div class="si"><div class="sv bad">237</div><div class="sl">В просрочке</div></div>
+      </div>
+    </div>
+
+    <div class="card good">
+      <div class="ch"><div class="cl">Среднее время возврата ДС</div><div class="ct">Цель ≤ 5 дней</div></div>
+      <div><span class="cn">3.2</span><span class="cu">дня</span></div>
+      <div class="cd">Среднее время возврата денежных средств по клиентским возвратам</div>
+      <div class="badge ok">↓ −0.4 дня к норме</div>
+      <div class="cdiv"></div>
+      <div class="sr">
+        <div class="si"><div class="sv">148</div><div class="sl">В работе</div></div>
+        <div class="si"><div class="sv good">97</div><div class="sl">Закрыто сегодня</div></div>
+      </div>
+    </div>
+
+    <div class="card good">
+      <div class="ch"><div class="cl">Refund Rate</div><div class="ct">Цель ≤ 8%</div></div>
+      <div><span class="cn">5.3</span><span class="cu">%</span></div>
+      <div class="pw"><div class="pb"><div class="pf good" style="width:66.25%"></div></div>
+        <div class="pl"><span>Заказов с возвратами</span><span>5.3 / 8%</span></div>
+      </div>
+      <div class="badge ok">↓ −0.6 пп к вчера</div>
+      <div class="cdiv"></div>
+      <div class="sr">
+        <div class="si"><div class="sv">179</div><div class="sl">Возвратов</div></div>
+        <div class="si"><div class="sv">3 378</div><div class="sl">Доставлено</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ЛОГИСТИКА ПРЕДИКТ -->
+<div class="block">
+  <div class="bh">
+    <div class="bh-l"><div class="bt">Логистика &mdash; Предикт нагрузки</div><div class="bc">Факторы влияния на КЦ</div></div>
+    <div class="bu">Обновлено: <span class="upd"></span></div>
+  </div>
+  <div class="g4">
+
+    <div class="card warn">
+      <div class="ch"><div class="cl">Переносы отгрузки</div><div class="ct">Цель ≤ 5%</div></div>
+      <div><span class="cn">7.4</span><span class="cu">%</span></div>
+      <div class="ds"><span class="di">⚠</span><span><strong>312 заказов</strong> не отгружено вовремя</span></div>
+      <div class="pw"><div class="pb"><div class="pf warn" style="width:74%"></div></div>
+        <div class="pl"><span>Факт 7.4%</span><span>Цель 5%</span></div>
+      </div>
+    </div>
+
+    <div class="card good">
+      <div class="ch"><div class="cl">Частотность переносов</div><div class="ct">Цель ≤ 1.3</div></div>
+      <div><span class="cn">1.1</span></div>
+      <div class="cd">Среднее число переносов на выполняющийся заказ</div>
+      <div class="badge ok">✓ В норме</div>
+      <div class="spk">
+        <svg class="spk" viewBox="0 0 160 28" preserveAspectRatio="none">
+          <polygon points="0,22 20,18 40,20 60,16 80,13 100,14 120,10 140,12 160,9 160,28 0,28" fill="rgba(29,94,56,.06)"/>
+          <polyline points="0,22 20,18 40,20 60,16 80,13 100,14 120,10 140,12 160,9" fill="none" stroke="var(--green)" stroke-width="1.5" opacity=".7"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="card warn">
+      <div class="ch"><div class="cl">Отмены товаров на комплектации</div><div class="ct">Цель ≤ 2%</div></div>
+      <div><span class="cn">3.1</span><span class="cu">%</span></div>
+      <div class="ds"><span class="di">⚠</span><span><strong>541 товар</strong> отменён из 17 460 к сборке</span></div>
+      <div class="pw"><div class="pb"><div class="pf warn" style="width:62%"></div></div>
+        <div class="pl"><span>Факт 3.1%</span><span>Цель 2%</span></div>
+      </div>
+    </div>
+
+    <div class="card good">
+      <div class="ch"><div class="cl">Отправлено заданий / смс</div><div class="ct">Цель ≤ 2.5</div></div>
+      <div><span class="cn">2.1</span></div>
+      <div class="cd">Среднее число коммуникаций на клиента сегодня</div>
+      <div class="badge ok">✓ В норме</div>
+      <div class="cdiv"></div>
+      <div class="sr">
+        <div class="si"><div class="sv">8 423</div><div class="sl">Всего смс</div></div>
+        <div class="si"><div class="sv">4 011</div><div class="sl">Клиентов</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- КЦ СЕЙЧАС -->
+<div class="block">
+  <div class="bh">
+    <div class="bh-l"><div class="bt">Контактный центр &mdash; Сейчас</div><div class="bc">Показатели обслуживания клиентов</div></div>
+    <div class="bu">Обновлено: <span class="upd"></span></div>
+  </div>
+
+  <div class="g4">
+    <div class="card good">
+      <div class="ch"><div class="cl">AHT — Среднее время</div><div class="ct">Цель ≤ 4:30</div></div>
+      <div><span class="cn">3:52</span><span class="cu">мин</span></div>
+      <div class="cd">Среднее время разговора с клиентом</div>
+      <div class="badge ok">↓ −8 сек к вчера</div>
+    </div>
+    <div class="card good">
+      <div class="ch"><div class="cl">SLA ответов</div><div class="ct">Цель ≥ 90%</div></div>
+      <div><span class="cn">92.3</span><span class="cu">%</span></div>
+      <div class="pw"><div class="pb"><div class="pf good" style="width:92.3%"></div></div>
+        <div class="pl"><span>Ответы в таргет</span><span>92.3 / 100</span></div>
+      </div>
+      <div class="badge ok">✓ В норме</div>
+    </div>
+    <div class="card good">
+      <div class="ch"><div class="cl">SLA заданий</div><div class="ct">Цель ≥ 88%</div></div>
+      <div><span class="cn">89.1</span><span class="cu">%</span></div>
+      <div class="pw"><div class="pb"><div class="pf good" style="width:89.1%"></div></div>
+        <div class="pl"><span>Задания в таргет</span><span>89.1 / 100</span></div>
+      </div>
+      <div class="badge ok">✓ В норме</div>
+    </div>
+    <div class="card warn">
+      <div class="ch"><div class="cl">Очередь чатов</div><div class="ct">Цель ≤ 3:00</div></div>
+      <div><span class="cn">3:41</span><span class="cu">мин</span></div>
+      <div class="ds"><span class="di">⚠</span><span><strong>+41 сек сверх таргета</strong> — ожидание растёт</span></div>
+    </div>
+  </div>
+
+  <div class="g-kc">
+    <div class="card good">
+      <div class="ch"><div class="cl">Количество обращений в КЦ</div></div>
+      <div><span class="cn">4 218</span></div>
+      <div class="cd">Разбивка по причинам обращений</div>
+      <div class="bdown">
+        <div class="brow"><div class="bdot" style="background:var(--gold2)"></div><div class="bname">Статус заказа</div><div class="bbg"><div class="bbf" style="width:80%;background:var(--gold2)"></div></div><div class="bv">1 603</div></div>
+        <div class="brow"><div class="bdot" style="background:var(--amber)"></div><div class="bname">Перенос доставки</div><div class="bbg"><div class="bbf" style="width:50%;background:var(--amber)"></div></div><div class="bv">1 012</div></div>
+        <div class="brow"><div class="bdot" style="background:var(--red)"></div><div class="bname">Возврат / отмена</div><div class="bbg"><div class="bbf" style="width:38%;background:var(--red)"></div></div><div class="bv">759</div></div>
+        <div class="brow"><div class="bdot" style="background:var(--green)"></div><div class="bname">Качество товара</div><div class="bbg"><div class="bbf" style="width:25%;background:var(--green)"></div></div><div class="bv">506</div></div>
+        <div class="brow"><div class="bdot" style="background:var(--border-dk)"></div><div class="bname">Прочее</div><div class="bbg"><div class="bbf" style="width:17%;background:var(--border-dk)"></div></div><div class="bv">338</div></div>
+      </div>
+    </div>
+    <div class="card good">
+      <div class="ch"><div class="cl">CR — Contact Rate</div><div class="ct">Норма ≥ 70%</div></div>
+      <div><span class="cn">74.2</span><span class="cu">%</span></div>
+      <div class="pw"><div class="pb"><div class="pf good" style="width:74.2%"></div></div>
+        <div class="pl"><span>Обращений к заказам</span><span>74.2%</span></div>
+      </div>
+      <div class="badge ok">✓ В норме</div>
+    </div>
+    <div class="card good">
+      <div class="ch"><div class="cl">Претензии</div><div class="ct">Цель ≤ 80</div></div>
+      <div><span class="cn">63</span></div>
+      <div class="cd">Создано претензий на сегодня</div>
+      <div class="badge ok">↓ −12 к вчера</div>
+      <div class="cdiv"></div>
+      <div class="sr">
+        <div class="si"><div class="sv">41</div><div class="sl">В работе</div></div>
+        <div class="si"><div class="sv good">22</div><div class="sl">Закрыто</div></div>
+      </div>
+    </div>
+
+    <!-- CSAT -->
+    <div class="card good">
+      <div class="ch"><div class="cl">CSAT</div><div class="ct">Цель ≥ 85%</div></div>
+      <div><span class="cn">88</span><span class="cu">%</span></div>
+      <div class="pw"><div class="pb"><div class="pf good" style="width:88%"></div></div>
+        <div class="pl"><span>Удовлетворённость клиентов</span><span>88 / 100</span></div>
+      </div>
+      <div class="badge ok">↑ +2 пп к вчера</div>
+      <div class="cdiv"></div>
+      <div class="sr">
+        <div class="si"><div class="sv">1 142</div><div class="sl">Оценок сегодня</div></div>
+        <div class="si"><div class="sv good">4.4</div><div class="sl">Средний балл</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ОБЩИЕ МЕТРИКИ -->
+<div class="block">
+  <div class="bh">
+    <div class="bh-l"><div class="bt">Общие метрики</div><div class="bc">Финансовые показатели дня</div></div>
+    <div class="bu">Обновлено: <span class="upd"></span></div>
+  </div>
+  <div class="g3-metrics">
+    <div class="card good">
+      <div class="ch"><div class="cl">A2N — Approved to Net</div><div class="ct">Норма ≤ 25% (одежда)</div></div>
+      <div><span class="cn">19.4</span><span class="cu">%</span></div>
+      <div class="pw"><div class="pb"><div class="pf good" style="width:77.6%"></div></div>
+        <div class="pl"><span>Выкуплено от апрувленных заказов</span><span>19.4 / 25%</span></div>
+      </div>
+      <div class="badge ok">✓ В пределах нормы</div>
+      <div class="cdiv"></div>
+      <div class="sr">
+        <div class="si"><div class="sv">1 840</div><div class="sl">Выкуплено</div></div>
+        <div class="si"><div class="sv">9 484</div><div class="sl">Апрувлено</div></div>
+        <div class="si"><div class="sv warn">5.6 пп</div><div class="sl">Запас</div></div>
+      </div>
+    </div>
+    <div class="card gold">
+      <div class="ch"><div class="cl">NET — Выручка дня</div><div class="ct">План €240 000</div></div>
+      <div><span class="cn" style="color:var(--gold)">€ 218 400</span></div>
+      <div class="pw"><div class="pb"><div class="pf warn" style="width:91%"></div></div>
+        <div class="pl"><span>Выполнение плана</span><span>91.0%</span></div>
+      </div>
+      <div class="badge ok">↑ Прогноз конца дня €247 000 (+3%)</div>
+      <div class="cdiv"></div>
+      <div class="sr">
+        <div class="si"><div class="sv warn">€ 21 600</div><div class="sl">До плана</div></div>
+        <div class="si"><div class="sv">09:22</div><div class="sl">Часов до конца</div></div>
+        <div class="si"><div class="sv good">+3%</div><div class="sl">Сверхплан</div></div>
+      </div>
+    </div>
+
+    <!-- CUSTOMER HEALTH INDEX -->
+    <div class="card good">
+      <div class="ch"><div class="cl">Customer Health Index</div><div class="ct">Сводный индекс</div></div>
+      <div class="chi-score">
+        <div class="chi-indicator healthy">🟢</div>
+        <div class="chi-verdict healthy">
+          <div class="cv-score">82</div>
+          <div class="cv-label">Клиенты здоровы</div>
+        </div>
+      </div>
+      <div class="chi-components">
+        <div class="chi-row">
+          <div class="chi-dot" style="background:var(--green)"></div>
+          <div class="chi-name">Идеальный заказ (ИЗ)</div>
+          <div class="chi-bar-bg"><div class="chi-bar-fill" style="width:94.7%;background:var(--green)"></div></div>
+          <div class="chi-val">94.7%</div>
+        </div>
+        <div class="chi-row">
+          <div class="chi-dot" style="background:var(--green)"></div>
+          <div class="chi-name">CR (Contact Rate)</div>
+          <div class="chi-bar-bg"><div class="chi-bar-fill" style="width:74.2%;background:var(--green)"></div></div>
+          <div class="chi-val">74.2%</div>
+        </div>
+        <div class="chi-row">
+          <div class="chi-dot" style="background:var(--green)"></div>
+          <div class="chi-name">% претензий</div>
+          <div class="chi-bar-bg"><div class="chi-bar-fill" style="width:18.6%;background:var(--green)"></div></div>
+          <div class="chi-val">1.86%</div>
+        </div>
+        <div class="chi-row">
+          <div class="chi-dot" style="background:var(--amber)"></div>
+          <div class="chi-name">% отмен</div>
+          <div class="chi-bar-bg"><div class="chi-bar-fill" style="width:62%;background:var(--amber)"></div></div>
+          <div class="chi-val">3.1%</div>
+        </div>
+        <div class="chi-row">
+          <div class="chi-dot" style="background:var(--green)"></div>
+          <div class="chi-name">CSAT</div>
+          <div class="chi-bar-bg"><div class="chi-bar-fill" style="width:88%;background:var(--green)"></div></div>
+          <div class="chi-val">88%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div><!-- /page1 -->
+
+<!-- ══════════════ PAGE 2 ══════════════ -->
+<div class="page" id="page2">
+<header>
+  <div class="h-top">
+    <div>
+      <div class="logo">Предикт нагрузки на КЦ</div>
+      <div class="logo-sub">Прогноз на основе логистических факторов — горизонт +3 часа</div>
+    </div>
+    <div class="h-status warn">
+      <div class="sdot warn"></div>
+      <div class="stxt warn">Повышенная нагрузка прогнозируется</div>
+    </div>
+    <div class="h-clock">
+      <div class="time" id="clock2">—</div>
+      <div class="date">27 февраля 2026</div>
+    </div>
+  </div>
+  <nav class="h-nav">
+    <button class="ni" onclick="showPage(1)">Текущие показатели</button>
+    <button class="ni active" onclick="showPage(2)">Предикт нагрузки на КЦ</button>
+  </nav>
+</header>
+
+<!-- HERO -->
+<div class="p2-hero">
+  <div class="p2-eyebrow">Автоматический предикт — обновлено <span class="upd"></span></div>
+  <div class="p2-title">Ожидается <span>+1 632</span> доп. обращения<br>до конца дня</div>
+  <div class="p2-desc">
+    Два логистических фактора выходят за норму и генерируют дополнительную нагрузку на КЦ.
+    Переносы отгрузки <strong>7.4%</strong> (312 заказов) и отмены на комплектации <strong>3.1%</strong> (541 товар)
+    угрожают SLA ответов, SLA заданий и очереди чатов уже через 3 часа.
+  </div>
+  <div class="p2-causes">
+    <div class="p2c-pill crit"><span>↑</span><span>Переносы отгрузки 7.4% → +562 обращений</span></div>
+    <div class="p2c-pill crit"><span>↑</span><span>Отмены комплектации 3.1% → +216 обращений</span></div>
+    <div class="p2c-pill ok"><span>✓</span><span>Частотность переносов — в норме</span></div>
+    <div class="p2c-pill ok"><span>✓</span><span>СМС-нагрузка — в норме</span></div>
+  </div>
+</div>
+
+<main>
+<div class="block" style="animation-delay:0s">
+  <div class="p2-sh">
+    <div class="p2-st">Прогноз метрик КЦ</div>
+    <div class="p2-sc">Текущее значение → прогноз через 3 часа</div>
+  </div>
+
+  <div class="g-pred4">
+    <div class="pc fc-warn">
+      <div class="pc-lbl">AHT — Среднее время</div>
+      <div class="pc-row">
+        <div class="pc-col"><div class="pc-ch">Сейчас</div><div class="pc-now">3:52</div></div>
+        <div class="pc-arr">→</div>
+        <div class="pc-col"><div class="pc-ch">Прогноз</div><div class="pc-fore warn">4:14</div></div>
+      </div>
+      <div class="pc-delta"><span class="pc-tag warn">+22 сек</span>Запросы по переносам сложнее. Цель 4:30 — <strong>пока в рамках.</strong></div>
+    </div>
+    <div class="pc fc-bad">
+      <div class="pc-lbl">SLA ответов</div>
+      <div class="pc-row">
+        <div class="pc-col"><div class="pc-ch">Сейчас</div><div class="pc-now">92.3%</div></div>
+        <div class="pc-arr">→</div>
+        <div class="pc-col"><div class="pc-ch">Прогноз</div><div class="pc-fore bad">88.1%</div></div>
+      </div>
+      <div class="pc-delta"><span class="pc-tag bad">−4.2%</span><strong class="bad">Выход ниже таргета 90%.</strong> Рост потока перегрузит смену.</div>
+    </div>
+    <div class="pc fc-bad">
+      <div class="pc-lbl">SLA заданий</div>
+      <div class="pc-row">
+        <div class="pc-col"><div class="pc-ch">Сейчас</div><div class="pc-now">89.1%</div></div>
+        <div class="pc-arr">→</div>
+        <div class="pc-col"><div class="pc-ch">Прогноз</div><div class="pc-fore bad">85.7%</div></div>
+      </div>
+      <div class="pc-delta"><span class="pc-tag bad">−3.4%</span><strong class="bad">Ниже таргета 88%.</strong> Доп. задания перегрузят очередь.</div>
+    </div>
+    <div class="pc fc-bad">
+      <div class="pc-lbl">Очередь чатов</div>
+      <div class="pc-row">
+        <div class="pc-col"><div class="pc-ch">Сейчас</div><div class="pc-now">3:41</div></div>
+        <div class="pc-arr">→</div>
+        <div class="pc-col"><div class="pc-ch">Прогноз</div><div class="pc-fore bad">5:20</div></div>
+      </div>
+      <div class="pc-delta"><span class="pc-tag bad">+1:39</span><strong class="bad">Значительный рост.</strong> Уже выше таргета 3:00 — поток критичен.</div>
+    </div>
+  </div>
+
+  <div class="g-pred3">
+    <div class="pc fc-bad">
+      <div class="pc-lbl">Количество обращений в КЦ</div>
+      <div class="pc-row">
+        <div class="pc-col"><div class="pc-ch">Сейчас</div><div class="pc-now">4 218</div></div>
+        <div class="pc-arr">→</div>
+        <div class="pc-col"><div class="pc-ch">Прогноз до конца дня</div><div class="pc-fore bad">5 850</div></div>
+      </div>
+      <div class="pc-delta">Прирост <strong class="bad">+1 632 обращений:</strong> переносы +562 · отмены +216 · прочий фон +854</div>
+    </div>
+    <div class="pc fc-ok">
+      <div class="pc-lbl">CR — Contact Rate</div>
+      <div class="pc-row">
+        <div class="pc-col"><div class="pc-ch">Сейчас</div><div class="pc-now">74.2%</div></div>
+        <div class="pc-arr">→</div>
+        <div class="pc-col"><div class="pc-ch">Прогноз</div><div class="pc-fore ok">78.9%</div></div>
+      </div>
+      <div class="pc-delta"><span class="pc-tag ok">В норме</span><strong class="ok">Норма ≥ 70%</strong> — значение в допустимом диапазоне.</div>
+    </div>
+    <div class="pc fc-bad">
+      <div class="pc-lbl">Претензии</div>
+      <div class="pc-row">
+        <div class="pc-col"><div class="pc-ch">Сейчас</div><div class="pc-now">63</div></div>
+        <div class="pc-arr">→</div>
+        <div class="pc-col"><div class="pc-ch">Прогноз</div><div class="pc-fore bad">95</div></div>
+      </div>
+      <div class="pc-delta"><span class="pc-tag bad">+32</span><strong class="bad">Выше таргета 80.</strong> Конверсия из отмен ~6%.</div>
+    </div>
+  </div>
+</div>
+</main>
+</div><!-- /page2 -->
+
+<script>
+function showPage(n){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page'+n).classList.add('active');
+  document.querySelectorAll('.ni').forEach(b=>{
+    if(n===1&&b.textContent.trim()==='Текущие показатели')b.classList.add('active');
+    if(n===2&&b.textContent.trim()==='Предикт нагрузки на КЦ')b.classList.add('active');
+  });
+  window.scrollTo(0,0);
+}
+function tick(){
+  const now=new Date();
+  const hh=String(now.getHours()).padStart(2,'0');
+  const mm=String(now.getMinutes()).padStart(2,'0');
+  const ss=String(now.getSeconds()).padStart(2,'0');
+  const t=hh+':'+mm+':'+ss;
+  ['clock1','clock2'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t;});
+  const months=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  const d1=document.getElementById('date1');
+  if(d1)d1.textContent=now.getDate()+' '+months[now.getMonth()]+' '+now.getFullYear();
+  document.querySelectorAll('.upd').forEach(el=>el.textContent=hh+':'+mm);
+}
+tick();
+setInterval(tick,1000);
+</script>
+</body>
+</html>
